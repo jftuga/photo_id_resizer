@@ -45,6 +45,7 @@ Option | Explanation
 
 * [Caire](https://github.com/esimov/caire) - a content aware image resizing library with face detection
 * [facefinder](https://github.com/esimov/caire/blob/master/data/facefinder) -  the face finding classification file use by this program
+* [Go Concurrency Patterns: Pipelines and cancellation](https://blog.golang.org/pipelines)
 
 **License**
 
