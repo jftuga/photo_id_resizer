@@ -3,7 +3,7 @@ photo_id_resizer
 -John Taylor
 Nov-26-2020
 
-Resize Photo IDs using face recognition technology
+Resize photo ID images using face recognition technology.
 */
 
 package main
@@ -34,7 +34,7 @@ type result struct {
 
 const pgmName = "photo_id_resizer"
 const pgmUrl = "https://github.com/jftuga/photo_id_resizer"
-const pgmVersion = "1.0.0"
+const pgmVersion = "1.1.0"
 const equalsLine = "=============================================================="
 
 // copy - copy a src file to a dst directory
@@ -55,7 +55,8 @@ func copy(src, dst string) (int64, error) {
 }
 
 // needsResizing - return true if source image has height greater than maxHeight
-func needsResizing(path string, maxHeight int) bool {
+// or image has width greater than maxWidth
+func needsResizing(path string, maxHeight, maxWidth int) bool {
 	if reader, err := os.Open(path); err == nil {
 		defer reader.Close()
 		im, _, err := image.DecodeConfig(reader)
@@ -64,6 +65,9 @@ func needsResizing(path string, maxHeight int) bool {
 			return false
 		}
 		if im.Height > maxHeight+1 {
+			return true
+		}
+		if im.Width > maxWidth+1 {
 			return true
 		}
 	}
@@ -85,7 +89,7 @@ func process(p *caire.Processor, dstname, srcname string) error {
 	if err != nil {
 		log.Fatalf("Unable to open source: %v", err)
 	}
-	if !needsResizing(srcname, p.NewHeight) {
+	if !needsResizing(srcname, p.NewHeight, p.NewWidth) {
 		copy(srcname, dstname)
 		return nil
 	}
@@ -255,15 +259,16 @@ func usage() {
 func main() {
 	argsSource := flag.String("s", "", "source directory")
 	argsDestination := flag.String("d", "", "destination directory")
-	argsHeight := flag.Int("h", 500, "max image height, min size=10")
+	argsHeight := flag.Int("h", 0, "max image height")
+	argsWidth := flag.Int("w", 0, "max image width")
 	argsMatch := flag.String("m", "jpg|png", "regular expression to match files. Ex: jpg")
 	argsFace := flag.String("f", "facefinder", "path to 'facefinder' classification file")
-	argsWorkers := flag.Int("w", runtime.NumCPU(), "number of files to process concurrently")
+	argsWorkers := flag.Int("t", runtime.NumCPU(), "number of files to process concurrently")
 	argsMaxAge := flag.Int("a", 0, "skip files older than X number of days. Ex: 0=do not skip any, 7=skip files older than a week")
 	flag.Usage = usage
 	flag.Parse()
 
-	if len(*argsSource) == 0 || len(*argsDestination) == 0 || *argsHeight < 10 {
+	if len(*argsSource) == 0 || len(*argsDestination) == 0 {
 		usage()
 		os.Exit(1)
 	}
@@ -280,10 +285,19 @@ func main() {
 		log.Fatalf("Destination directory does not exist: %s", *argsDestination)
 	}
 
+	if *argsHeight == 0 && *argsWidth == 0 {
+		fmt.Fprintf(os.Stderr, "\nYou must provide either a -h and/or -w command-line option.\n")
+		os.Exit(1)
+	}
+
+	if *argsHeight > 0 && *argsWidth > 0 {
+		fmt.Fprintf(os.Stderr, "\nWARNING: Using both -h and -w together may lead to undesirable results!\n\n")
+	}
+
 	p := &caire.Processor{
 		BlurRadius:     10,
 		SobelThreshold: 1,
-		NewWidth:       0,
+		NewWidth:       *argsWidth,
 		NewHeight:      *argsHeight,
 		Percentage:     false,
 		Square:         false,
