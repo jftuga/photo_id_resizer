@@ -37,6 +37,7 @@ const pgmUrl = "https://github.com/jftuga/photo_id_resizer"
 const pgmVersion = "1.0.0"
 const equalsLine = "=============================================================="
 
+// copy - copy a src file to a dst directory
 func copy(src, dst string) (int64, error) {
 	source, err := os.Open(src)
 	if err != nil {
@@ -53,6 +54,7 @@ func copy(src, dst string) (int64, error) {
 	return nBytes, err
 }
 
+// needsResizing - return true if source image has height greater than maxHeight
 func needsResizing(path string, maxHeight int) bool {
 	if reader, err := os.Open(path); err == nil {
 		defer reader.Close()
@@ -68,12 +70,15 @@ func needsResizing(path string, maxHeight int) bool {
 	return false
 }
 
+// isOlderThan - return true if the given time, t is older than maxAge days
 func isOlderThan(maxAge int, t time.Time) bool {
 	days := maxAge * -1
 	earlier := time.Now().AddDate(0, 0, days)
 	return t.Before(earlier)
 }
 
+// process - examine a single srcname, resize if necessary
+// and then save or copy to dstname
 func process(p *caire.Processor, dstname, srcname string) error {
 	var src io.Reader
 	_, err := os.Stat(srcname)
@@ -125,11 +130,11 @@ func walkFiles(done <-chan struct{}, source string, match string, maxAge int) (<
 		log.Fatalf("Invalid regular expression: %s\n", match)
 	}
 
-	go func() { // HL
+	go func() {
 		// Close the paths channel after Walk returns.
-		defer close(paths) // HL
+		defer close(paths)
 		// No select needed for this send, since errc is buffered.
-		errc <- filepath.Walk(source, func(path string, info os.FileInfo, err error) error { // HL
+		errc <- filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -168,7 +173,7 @@ func walkFiles(done <-chan struct{}, source string, match string, maxAge int) (<
 // files on c until either paths or done is closed.
 func digester(done <-chan struct{}, paths <-chan string, dest string, p *caire.Processor, c chan<- result) {
 	var err error
-	for path := range paths { // HLpaths
+	for path := range paths {
 		destFile := filepath.Join(dest, filepath.Base(path))
 		process(p, destFile, path)
 
@@ -215,6 +220,7 @@ func ImageSizeAll(source, match, dest string, numWorkers, maxAge int, p *caire.P
 	return nil
 }
 
+// fileExists - return true if given file exists
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
@@ -223,6 +229,7 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
+// dirExists - return true if given directory exists
 func dirExists(dirname string) bool {
 	info, err := os.Stat(dirname)
 	if os.IsNotExist(err) {
@@ -231,6 +238,7 @@ func dirExists(dirname string) bool {
 	return info.IsDir()
 }
 
+// usgae - output program's usage
 func usage() {
 	pgmName := os.Args[0]
 	if strings.HasPrefix(os.Args[0], "./") {
@@ -242,6 +250,8 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+// main - process command-line arguments, do some error checking
+// and then call ImageSizeAll()
 func main() {
 	argsSource := flag.String("s", "", "source directory")
 	argsDestination := flag.String("d", "", "destination directory")
