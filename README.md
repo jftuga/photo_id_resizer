@@ -5,7 +5,7 @@ Resize Photo IDs using face recognition technology
 
 The program is used to resize large photo ID images which reside in a `source` directory and save them into a different
 `destination` directory.  If an image file does not need to be resized (eg it is already smaller than `max height`), then the
-file is simply copied from the `source` directory to the `destination` directory.  When image resizing occurs, this [content aware image resizing library](https://github.com/esimov/caire) is used with its face detection algorithm.
+file is simply copied from the `source` directory to the `destination` directory.  When image resizing occurs, this [content aware image resizing library](https://github.com/esimov/caire) is used with its face detection algorithm to avoid face deformation.
 
 **Usage**
 
@@ -37,11 +37,11 @@ Option | Explanation
 -s r:\photos | source directory
 -d r:\resized | destination directory
 -f r:\facefinder | location of the 'facefinder' classification file
--h 500 | resize file if height is greater than 500 pixels, otherwise, just copy to destination
+-h 500 | resize file if height is greater than 500 pixels, otherwise, just copy image to destination
 -w 10 | process 10 images concurrently
 -a 30 | skip files older then 30 days
 
-**Acknowlegements**
+**Acknowledgements**
 
 * [Caire](https://github.com/esimov/caire) - a content aware image resizing library with face detection
 * [facefinder](https://github.com/esimov/caire/blob/master/data/facefinder) -  the face finding classification file use by this program
