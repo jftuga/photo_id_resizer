@@ -1,3 +1,11 @@
+/*
+photo_id_resizer
+-John Taylor
+Nov-26-2020
+
+Resize Photo IDs using face recognition technology
+*/
+
 package main
 
 import (
@@ -63,8 +71,6 @@ func needsResizing(path string, maxHeight int) bool {
 func isOlderThan(maxAge int, t time.Time) bool {
 	days := maxAge * -1
 	earlier := time.Now().AddDate(0, 0, days)
-	//fmt.Printf("isolderThan  earlier: %v   t:%v   days:%v   after:   %v\n", earlier, t, days, t.After(earlier))
-	//fmt.Printf("%v %v\n", days, t.After(earlier))
 	return t.Before(earlier)
 }
 
@@ -131,38 +137,30 @@ func walkFiles(done <-chan struct{}, source string, match string, maxAge int) (<
 			if !includeMatched.Match([]byte(info.Name())) {
 				fmt.Printf("    file didn't match : %v\n", match)
 				fmt.Println(equalsLine)
-				return nil // errors.New("MATCH FAILED")
+				return nil
 			}
 			if !info.Mode().IsRegular() {
 				fmt.Println("    file is not regular")
 				fmt.Println(equalsLine)
-				return nil //errors.New("NOT REGULAR")
+				return nil
 			}
 			if maxAge > 0 && isOlderThan(maxAge, info.ModTime()) {
 				fmt.Printf("    file is too old   : %v\n", info.ModTime())
 				fmt.Println(equalsLine)
-				//fmt.Println()
-				return nil // errors.New("OLDER")
+				return nil
 			} else {
 				fmt.Printf("    file is new enough: %v\n", info.ModTime())
 				fmt.Println(equalsLine)
-				//fmt.Println()
 			}
 			select {
-			case paths <- path: // HL
-			case <-done: // HL
+			case paths <- path:
+			case <-done:
 				return errors.New("walk canceled")
 			}
 			return nil
 		})
 	}()
-	/*
-		z := 1
-		for p := range paths {
-			fmt.Printf("ZZZ: [%06d] %v\n", z, p)
-			z++
-		}
-	*/
+
 	return paths, errc
 }
 
@@ -173,7 +171,7 @@ func digester(done <-chan struct{}, paths <-chan string, dest string, p *caire.P
 	for path := range paths { // HLpaths
 		destFile := filepath.Join(dest, filepath.Base(path))
 		process(p, destFile, path)
-		//fmt.Println(p.NewHeight, dest, destFile, path)
+
 		select {
 		case c <- result{path, err}:
 		case <-done:
@@ -271,9 +269,6 @@ func main() {
 	if !dirExists(*argsDestination) {
 		log.Fatalf("Destination directory does not exist: %s", *argsDestination)
 	}
-
-	//sourceFiles := getFiles(*argsSource, *argsMatch)
-	//fmt.Println(sourceFiles)
 
 	p := &caire.Processor{
 		BlurRadius:     10,
