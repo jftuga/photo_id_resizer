@@ -1,5 +1,5 @@
 # photo_id_resizer
-Resize Photo IDs using face recognition technology
+Resize photo ID images using face recognition technology.
 
 Binaries for Windows, MacOS, and Linux can be found on the [Releases Page](https://github.com/jftuga/photo_id_resizer/releases).
 
