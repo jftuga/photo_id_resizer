@@ -21,18 +21,20 @@ photo_id_resizer.exe: resize photo ID image files
   -f string
     	path to 'facefinder' classification file (default: "facefinder")
   -h int
-    	max image height, min size=10 (default: 500)
+    	max image height
   -m string
     	regular expression to match files. Ex: jpg (default: "jpg|png")
   -s string
     	source directory
-  -w int
+  -t int
     	number of files to process concurrently (default: # of CPU cores)
+  -w int
+    	max image width
 ```
 
 **Example**
 
-    photo_id_resizer -s r:\photos -d r:\resized -f r:\facefinder -h 500 -m jpg -w 10 -a 30
+    photo_id_resizer -s r:\photos -d r:\resized -f r:\facefinder -h 500 -m jpg -t 10 -a 30
 
 Option | Explanation
 -------|------------
@@ -41,7 +43,7 @@ Option | Explanation
 -f r:\facefinder | location of the 'facefinder' classification file
 -h 500 | resize file if height is greater than 500 pixels, otherwise, just copy image to destination
 -m jpg | match any file name containing 'jpg'; for case insensitive use: (?i)jpg
--w 10 | process 10 images concurrently
+-t 10 | process 10 images concurrently
 -a 30 | skip files older then 30 days
 
 **Acknowledgements**
