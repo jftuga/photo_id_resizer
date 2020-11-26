@@ -40,6 +40,7 @@ Option | Explanation
 -d r:\resized | destination directory
 -f r:\facefinder | location of the 'facefinder' classification file
 -h 500 | resize file if height is greater than 500 pixels, otherwise, just copy image to destination
+-m jpg | match any file name containing 'jpg'; for case insensitive use: (?i)jpg
 -w 10 | process 10 images concurrently
 -a 30 | skip files older then 30 days
 
