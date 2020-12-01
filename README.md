@@ -42,8 +42,6 @@ photo_id_resizer.exe: resize photo ID image files
 photo_id_resizer -s r:\photos -d r:\resized -f r:\facefinder -h 500 -m jpg -t 10 -a 30
 ```
 
-**Options**
-
 Option | Explanation
 -------|------------
 -s r:\photos | source directory
