@@ -34,7 +34,7 @@ photo_id_resizer.exe: resize photo ID image files
 
 **Example**
 
-* Copy files from `r:\photos` to `r:\resized` and resize and photos that have a height greater than `500`.
+* Copy `jpg` files from `r:\photos` to `r:\resized` resizing any photos that have a height greater than `500`.
 * Process `10` files concurrently that are `30` days old or newer.
 * Use `r:\facefinder` for the classification file.
 
