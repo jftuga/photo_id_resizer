@@ -12,6 +12,7 @@ file is simply copied from the `source` directory to the `destination` directory
 **Usage**
 
 ```
+
 photo_id_resizer.exe: resize photo ID image files
 
   -a int
@@ -30,6 +31,8 @@ photo_id_resizer.exe: resize photo ID image files
     	number of files to process concurrently (default: # of CPU cores)
   -w int
     	max image width
+  -x string
+      regular expression to exclude files, precedes -m
 ```
 
 **Example**
