@@ -34,7 +34,7 @@ type result struct {
 
 const pgmName = "photo_id_resizer"
 const pgmUrl = "https://github.com/jftuga/photo_id_resizer"
-const pgmVersion = "1.1.0"
+const pgmVersion = "1.2.0"
 const equalsLine = "=============================================================="
 
 // copy - copy a src file to a dst directory
@@ -124,12 +124,24 @@ func process(p *caire.Processor, dstname, srcname string) error {
 // walkFiles starts a goroutine to walk the directory tree at source and send the
 // path of each regular file on the string channel.  It sends the result of the
 // walk on the error channel.  If done is closed, walkFiles abandons its work.
-func walkFiles(done <-chan struct{}, source string, match string, maxAge int) (<-chan string, <-chan error) {
+func walkFiles(done <-chan struct{}, source string, match, exclude string, maxAge int) (<-chan string, <-chan error) {
 	paths := make(chan string)
 	errc := make(chan error, 1)
 
+	usingExclude := false
+	var excludeMatched *regexp.Regexp
+	var err error
+
+	if len(exclude) > 0 {
+		usingExclude = true
+		excludeMatched, err = regexp.Compile(exclude)
+		if err != nil {
+			log.Fatalf("Invalid regular expression: %s\n", exclude)
+		}
+	}
+
 	var includeMatched *regexp.Regexp
-	includeMatched, err := regexp.Compile(match)
+	includeMatched, err = regexp.Compile(match)
 	if err != nil {
 		log.Fatalf("Invalid regular expression: %s\n", match)
 	}
@@ -143,6 +155,11 @@ func walkFiles(done <-chan struct{}, source string, match string, maxAge int) (<
 				return err
 			}
 			fmt.Println("name: ", info.Name())
+			if usingExclude && excludeMatched.Match([]byte(info.Name())) {
+				fmt.Printf("    file excluded via reg expr : %v\n", exclude)
+				fmt.Println(equalsLine)
+				return nil
+			}
 			if !includeMatched.Match([]byte(info.Name())) {
 				fmt.Printf("    file didn't match : %v\n", match)
 				fmt.Println(equalsLine)
@@ -190,11 +207,11 @@ func digester(done <-chan struct{}, paths <-chan string, dest string, p *caire.P
 }
 
 // ImageSizeAll reads all the files in the file tree rooted at root and returns a map
-func ImageSizeAll(source, match, dest string, numWorkers, maxAge int, p *caire.Processor) error {
+func ImageSizeAll(source, match, exclude, dest string, numWorkers, maxAge int, p *caire.Processor) error {
 	done := make(chan struct{})
 	defer close(done)
 
-	paths, errc := walkFiles(done, source, match, maxAge)
+	paths, errc := walkFiles(done, source, match, exclude, maxAge)
 
 	// Start a fixed number of goroutines to read and digest files.
 	c := make(chan result)
@@ -262,6 +279,7 @@ func main() {
 	argsHeight := flag.Int("h", 0, "max image height")
 	argsWidth := flag.Int("w", 0, "max image width")
 	argsMatch := flag.String("m", "jpg|png", "regular expression to match files. Ex: jpg")
+	argsExclude := flag.String("x", "", "regular expression to exclude files, precedes -m")
 	argsFace := flag.String("f", "facefinder", "path to 'facefinder' classification file")
 	argsWorkers := flag.Int("t", runtime.NumCPU(), "number of files to process concurrently")
 	argsMaxAge := flag.Int("a", 0, "skip files older than X number of days. Ex: 0=do not skip any, 7=skip files older than a week")
@@ -282,7 +300,10 @@ func main() {
 	}
 
 	if !dirExists(*argsDestination) {
-		log.Fatalf("Destination directory does not exist: %s", *argsDestination)
+		err := os.Mkdir(*argsDestination, 0700)
+		if err != nil {
+			log.Fatalf("Destination directory does not exist: %s ; %s\n", *argsDestination, err)
+		}
 	}
 
 	if *argsHeight == 0 && *argsWidth == 0 {
@@ -308,5 +329,5 @@ func main() {
 		Classifier:     *argsFace,
 	}
 
-	ImageSizeAll(*argsSource, *argsMatch, *argsDestination, *argsWorkers, *argsMaxAge, p)
+	ImageSizeAll(*argsSource, *argsMatch, *argsExclude, *argsDestination, *argsWorkers, *argsMaxAge, p)
 }
